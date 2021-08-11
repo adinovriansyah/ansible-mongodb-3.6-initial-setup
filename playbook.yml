@@ -3,8 +3,8 @@
   connection: local
   vars:
     tvlk_mongod_initialization: true
-    keyfile: "{{ lookup('file','/etc/mongodb_keyfile')}}"
-    datadog_api_key_parameter_store: "{{ lookup('aws_ssm','/tvlk-secret/shared/acd/datadog.api.key',region='ap-southeast-1',decrypt=True)}}"
+    #keyfile: "{{ lookup('file','/etc/mongodb_keyfile')}}"
+    #datadog_api_key_parameter_store: "{{ lookup('aws_ssm','/tvlk-secret/shared/acd/datadog.api.key',region='ap-southeast-1',decrypt=True)}}"
   pre_tasks:
     - block:
         - name: set instance hostname
@@ -12,17 +12,17 @@
             name: "{{ hostname }}"
       become: yes
       become_method: sudo
-      when: keyfile and temporary_master_password != ""
+      #when: keyfile and temporary_master_password != ""
   roles:
-    #- role: xfsvolume
-    #  xfs_volume_device: "{{volume_device | default('/dev/xvdf')}}"
-    #  xfs_volume_mount: /var/lib/mongodb
-    #  xfs_volume_force_format: yes
-    - role: mongod-3.6
-      mongodb_authorization_enabled: false
-      when: tvlk_mongod_initialization == true
-    #- role: datadog-agent
-    #  datadog_api_key: "{{ datadog_api_key_parameter_store }}"
+    - role: xfsvolume
+      xfs_volume_device: "{{volume_device | default('/dev/xvdf')}}"
+      xfs_volume_mount: /var/lib/mongodb
+      xfs_volume_force_format: yes
+    #- role: mongod-3.6
+    #  mongodb_authorization_enabled: false
+    #  when: tvlk_mongod_initialization == true
+    - role: datadog-agent
+      datadog_api_key: "{{ datadog_api_key }}"
     - role: awslogs-config
       awslogs_app_name: "{{service_name}}-mongod"
       awslogs_app_log_settings:
@@ -30,9 +30,9 @@
           datetime_format: "%Y-%m-%dT%H:%M:%S.%F%z"
           group_name: "/tvlk/mongod/{{ service_name }}/mongod.log"
           time_zone: "UTC"
-    - role: mongo-root-user
-      login_password: "{{ temporary_master_password }}"
-    - role: mongod-3.6
-      mongodb_repl_set_name: "{{ replica_set_name }}"
-      mongodb_keyfile_content: "{{ keyfile }}"
-      when: tvlk_mongod_initialization == true
+    #- role: mongo-root-user
+    #  login_password: "{{ temporary_master_password }}"
+    #- role: mongod-3.6
+    #  mongodb_repl_set_name: "{{ replica_set_name }}"
+    #  mongodb_keyfile_content: "{{ keyfile }}"
+    #  when: tvlk_mongod_initialization == true
